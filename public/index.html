@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件上传</title>
+</head>
+
+<body>
+  <div>
+    <input type="file" id="btnFile" />
+    <input type="button" value="上传" onclick="upload(0)" />
+    <script>
+      let btnFile = document.querySelector('#btnFile');
+      console.log('btnFile::', btnFile);
+      // function upload() {
+      //   let file = btnFile.files[0];
+      //   let formData = new FormData();
+      //   formData.append('file', file);
+      //   console.log('fetch::', fetch);
+      //   fetch('/upload', {
+      //     method: 'POST',
+      //     body: formData
+      //   }).then((res) => {
+      //     console.log('res::', res);
+      //   });
+      // }
+      const chunkSize = 1024 * 1024 * 4;
+      function upload(index) {
+        let file = btnFile.files[0];
+        let [fileName, fileExt] = file.name.split('.');
+
+        let start = index * chunkSize;
+        if (start > file.size) {
+          merge(file.name);
+          return;
+        }
+
+        let blob = file.slice(start, start + chunkSize);
+
+        let blobName = `${fileName}.${index}.${fileExt}`;
+        let blobFile = new File([blob], blobName);
+        console.log('blobName::', blobName);
+
+        let formData = new FormData();
+        formData.append('file', blobFile);
+        console.log('fetch::', fetch);
+        fetch('/upload', {
+          method: 'POST',
+          body: formData
+        }).then((res) => {
+          console.log('res::', res);
+          if (res.ok) {
+            upload(++index);
+          }
+        });
+      }
+      function merge(name) {
+        fetch('/merge', {
+          method: 'POST',
+          body: JSON.stringify({ name: name }), // data can be `string` or {object}!
+          headers: new Headers({
+            'Content-Type': 'application/json'
+          })
+        })
+      }
+    </script>
+  </div>
+</body>
+
+</html>
